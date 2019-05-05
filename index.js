@@ -1,7 +1,11 @@
 const keypress = require('keypress');
-const logUpdate = require('log-update');
 const HubControl = require('./src/hub-control');
 const inputs = require('./src/input-modes');
+const MsgServer = require('./src/socket-server.js');
+
+const SOCKET='/tmp/mysocket';
+let msgServer = new MsgServer(SOCKET, () => 'Message Server started');
+msgServer.start();
 
 const deviceInfo = {
   ports: {
@@ -26,15 +30,16 @@ const controlData = {
   turnAngle: 0,
   tilt: { roll: 0, pitch: 0 },
   forceState: null,
-  updateInputMode: null
+  updateInputMode: null,
+  rotate: false
 };
 
 let uiUpdaterInteral = null;
-let selectedInputMode = inputs.arcadeDrive;
+let selectedInputMode = inputs.manualDrive;
 
 function printUI() {
-  const datas = [JSON.stringify(deviceInfo, null, 1), JSON.stringify(controlData, null, 1)]; 
-  logUpdate(datas);
+  msgServer.write('device', deviceInfo);
+  msgServer.write('control', controlData);
 }
 
 keypress(process.stdin);
@@ -45,14 +50,14 @@ process.stdin.on('keypress', async (str, key) => {
     return;
   } else if (key.ctrl && key.name === 'c') {
     clearInterval(uiUpdaterInteral);
-    console.log('Disconnecting...');    
+    console.log('Disconnecting...');
     await hubControl.disconnect();
     console.log('Disconnected');
     process.exit();
   } else {
     controlData.input = key.name;
     selectedInputMode(controlData);
-    
+
     if (controlData.forceState){
       hubControl.setNextState(controlData.forceState);
       controlData.forceState = null;
@@ -61,17 +66,12 @@ process.stdin.on('keypress', async (str, key) => {
       selectedInputMode = controlData.updateInputMode;
       controlData.updateInputMode = null;
     }
-    
+    hubControl.update();
+
     printUI();
   }
 });
 
 const hubControl = new HubControl(deviceInfo, controlData);
 hubControl.setNextState('Manual');
-hubControl.start().then(() => {
-  console.log('\x1Bc');
-  uiUpdaterInteral = setInterval(() => {
-    printUI();
-    hubControl.update();
-  }, 100);
-});
+hubControl.start().then(printUI);
