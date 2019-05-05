@@ -37,10 +37,10 @@ function stepByStep(controlData) {
       controlData.updateInputMode = manualDrive;
       break;
   }
-  
+
   checkMaximums(controlData);
 }
-  
+
 function manualDrive(controlData) {
   switch (controlData.input) {
     case 'up':
@@ -60,13 +60,13 @@ function manualDrive(controlData) {
       controlData.turnAngle = 0;
       break;
     case 'left':
-      if (controlData.turnAngle > 0) 
+      if (controlData.turnAngle > 0)
         controlData.turnAngle = -10;
       else
         controlData.turnAngle -= 10;
       break;
     case 'right':
-      if (controlData.turnAngle < 0) 
+      if (controlData.turnAngle < 0)
         controlData.turnAngle = 10;
       else
         controlData.turnAngle += 10;
@@ -107,10 +107,16 @@ function manualDrive(controlData) {
     case 'y':
       controlData.updateInputMode = arcadeDrive;
       break;
+    case 'r':
+      controlData.speed = 0;
+      controlData.turnAngle = 10;
+      controlData.rotate = ! controlData.rotate;
+
   }
-  
+
   checkMaximums(controlData);
 }
+
 
 // TODO: Handle for keyup/keydown events, so control can handle forward and turning at the same time
 function arcadeDrive(controlData) {

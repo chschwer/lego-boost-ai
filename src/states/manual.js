@@ -1,7 +1,15 @@
 function manual() {
-  if (this.control.speed != this.prevControl.speed || this.control.turnAngle != this.prevControl.turnAngle) {
+  if (this.control.speed != this.prevControl.speed 
+	  || this.control.turnAngle != this.prevControl.turnAngle
+          || this.control.rotate != this.prevControl.rotate) {
+
     let motorA = this.control.speed + (this.control.turnAngle > 0 ? Math.abs(this.control.turnAngle) : 0);
     let motorB = this.control.speed + (this.control.turnAngle < 0 ? Math.abs(this.control.turnAngle) : 0);
+
+    if (this.control.rotate) {
+      motorA = this.control.turnAngle;
+      motorB = - motorA; 
+    }
         
     if (motorA > 100) {
       motorB -= motorA - 100;
